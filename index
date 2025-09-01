@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #e5e7eb;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-2">KPI Explorer</h1>
+            <p class="text-lg text-gray-600">Filter and explore key performance indicators</p>
+        </header>
+
+        <main>
+            <div class="mb-8">
+                <label for="subject-filter" class="block text-sm font-medium text-gray-700 mb-2">Filter by Subject:</label>
+                <select id="subject-filter" class="w-full sm:w-1/3 p-3 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="all">All</option>
+                </select>
+            </div>
+
+            <div id="kpi-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- KPI cards will be dynamically inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Define the data from the CSV file as a JavaScript array of objects
+        const kpiData = [
+            { "Subject": "Reveunes", "KPI": "Monthly Revenue (ARPA)", "Definition": "ARPA: Average revenue per client calculated as monthly revenue divided by number of paid active clients", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Insights", "Segmentation available": "By country / site / customer classification / client typology: monthly composition, variation and share", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Monthly Revenue (ARPA)", "Definition": "ARPA: Average revenue per client calculated as monthly revenue divided by number of paid active clients", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Tablero ARPA", "Segmentation available": "By country / city / neighbourhood / client / channel / product type / customer classification", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": "Tipo Revenue = considerado\nEstado = Activo" },
+            { "Subject": "Reveunes", "KPI": "Billed Revenue", "Definition": "Actual billing (SAP)", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Insights", "Segmentation available": "By country / site / type of client / currency", "Source": "SAP (ke5z)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Billed Revenue", "Definition": "Actual billing (SAP)", "Update": "Daily", "Granularity": "Detail", "Best available source": "Tablero Ventas", "Segmentation available": "By country / city / site / business / client / product type / currency / segment of the client / sales classification", "Source": "SAP (ke5z)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Accrued Revenue", "Definition": "Revenue distributed according to its validity and days of its billing date", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Insights", "Segmentation available": "By country / site / currency", "Source": "SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Accrued Revenue (BI)", "Definition": "Revenue distributed according to its validity and days of its billing date", "Update": "Daily", "Granularity": "Detail", "Best available source": "Tablero Revenue Devengado", "Segmentation available": "By country / client / product type / order / seller", "Source": "SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Discounts", "Definition": "Discounts: must be in the check-in", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Tablero Ventas", "Segmentation available": "By country / city / site / business / client / product type / currency / segment of the client / classification of sales", "Source": "SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Bonuses", "Definition": "Bonuses: free orders, according to the price list", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Tablero Ventas", "Segmentation available": "By country / city / site / business / client / product type / currency / segment of the client / classification of sales", "Source": "SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Reveunes", "KPI": "Ecommerce Revenue", "Definition": "Billed revenue according to ecommerce channel", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Tablero Insights", "Segmentation available": "By site / client  / Product / currency", "Source": "SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Clients & Publishers", "KPI": "Numbres of clientes", "Definition": "Number of paying clients to date", "Update": "Daily", "Granularity": "Grouped", "Best available source": "Tablero Insights", "Segmentation available": "By country / site / currency", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Clients & Publishers", "KPI": "Numbres of clientes", "Definition": "Number of paying clients to date", "Update": "Daily", "Granularity": "Detail", "Best available source": "Tablero de Clientes", "Segmentation available": "By country / city / neighbourhood\nBy revenue segment and channel (ecommerce or not) ....", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": "nan" },
+            { "Subject": "Clients & Publishers", "KPI": "Publishers", "Definition": "number of publishers per month", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Insights", "Segmentation available": "By country / site / tipe of client / currency", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Clients & Publishers", "KPI": "Churn", "Definition": "Churn", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Churn", "Segmentation available": "By country / site / currency", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Clients & Publishers", "KPI": "Churn", "Definition": "Churn", "Update": "Daily", "Granularity": "Detail", "Best available source": "Tablero Churn", "Segmentation available": "By country / site / tipe of client / kind of listing / risk / revenue segment/ rurrency", "Source": "Transaccional (Portal) SAP", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Listings", "Definition": "# Listings Online to date", "Update": "Daily", "Granularity": "Detail", "Best available source": "L&L Dashboard", "Segmentation available": "By country / city / neighbourhood / op / type of listing / type of lead\n", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Leads", "Definition": "# Lead Acummulate to date", "Update": "Daily", "Granularity": "Detail", "Best available source": "L&L Dashboard", "Segmentation available": "By country / city / neighbourhood / op / type of listing / type of lead\n", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Ratio L/L", "Definition": "# Ratio Leads over Listings", "Update": "Daily", "Granularity": "Detail", "Best available source": "L&L Dashboard", "Segmentation available": "By country / city / neighbourhood / op / type of listing / type of lead\n", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Impressions", "Definition": "# Listing impressions", "Update": "Weekly", "Granularity": "Detail", "Best available source": "L&L Dashboard", "Segmentation available": "By country / city / neighbourhood", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Visits", "Definition": "# Listing visits", "Update": "Weekly", "Granularity": "Detail", "Best available source": "L&L Dashboard", "Segmentation available": "By country / city / neighbourhood", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "Cronut", "Definition": "Traffic of the cronut regions", "Update": "Weekly", "Granularity": "Detail", "Best available source": "Tablero Cronut", "Segmentation available": "By country / city / neighbourhood / op / type of listing / type of lead\n", "Source": "Transaccional (Portal)", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Leads & Listings", "KPI": "# Leads and Sessions by source", "Definition": "# Leads and sessions by source per month and portal", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Marketing Dashboard", "Segmentation available": "By country / Portal / Source", "Source": "GA", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Genesys", "KPI": "Attention and Satisfaction", "Definition": "calls and satisfaction surveys. Obtained from the genesys platform", "Update": "Hourly", "Granularity": "Detail", "Best available source": "Dashboard Sales & ATC", "Segmentation available": "By call / Session / Agent", "Source": "Genesys", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Oportunidades", "KPI": "Oportunidades SalesForce", "Definition": "State of opportunities", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Management Dashboard", "Segmentation available": "By country / type of opp / Stage / Campaign / Segment / Account", "Source": "Sales Force", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Crawler", "KPI": "# competision listings (crawlers)", "Definition": "amount of listing in competition sites", "Update": "Monthly", "Granularity": "Detail", "Best available source": "Tablero Crawler", "Segmentation available": "By country / site / city", "Source": "Crawler BI", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Crawler", "KPI": "Share of listings & visits", "Definition": "No hay definición disponible.", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Insight Dashboard", "Segmentation available": "By country / site / tipe of client / currency", "Source": "Listings: Crawlers BI\nVisits: Similarweb", "Link to workspace": "Link Producción", "Filters": null },
+            { "Subject": "Crawler", "KPI": "Portals index", "Definition": "Comparison of all metrics against competitors", "Update": "Monthly", "Granularity": "Grouped", "Best available source": "Tablero Índice de Portales", "Segmentation available": "By country / site", "Source": "SimilarWeb / Crawler BI / Tokko", "Link to workspace": "Link Producción", "Filters": null }
+        ];
+
+        const subjectFilter = document.getElementById('subject-filter');
+        const kpiContainer = document.getElementById('kpi-container');
+
+        // Extract unique subjects to populate the filter dropdown
+        const subjects = [...new Set(kpiData.map(item => item.Subject))];
+        subjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject;
+            option.textContent = subject;
+            subjectFilter.appendChild(option);
+        });
+
+        // Function to render KPI cards based on the selected filter
+        function renderKPIs(filterSubject) {
+            kpiContainer.innerHTML = ''; // Clear previous cards
+            const filteredData = filterSubject === 'all'
+                ? kpiData
+                : kpiData.filter(item => item.Subject === filterSubject);
+
+            if (filteredData.length === 0) {
+                kpiContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">No KPIs found for this subject.</p>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1';
+                
+                let definitionHtml = item.Definition ? `<p class="text-sm text-gray-600 mb-4">${item.Definition}</p>` : `<p class="text-sm text-gray-400 mb-4 italic">No definition available.</p>`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-chart-line text-2xl text-indigo-500 mr-3"></i>
+                        <h2 class="text-lg font-semibold text-gray-800">${item.KPI}</h2>
+                    </div>
+                    ${definitionHtml}
+                    <div class="space-y-2 text-sm text-gray-700">
+                        <div class="flex items-center"><i class="fas fa-cubes text-gray-400 mr-2"></i><strong>Subject:</strong> <span class="ml-1">${item.Subject}</span></div>
+                        <div class="flex items-center"><i class="fas fa-sync-alt text-gray-400 mr-2"></i><strong>Update:</strong> <span class="ml-1">${item.Update}</span></div>
+                        <div class="flex items-center"><i class="fas fa-compress-alt text-gray-400 mr-2"></i><strong>Granularity:</strong> <span class="ml-1">${item.Granularity}</span></div>
+                        <div class="flex items-start"><i class="fas fa-layer-group text-gray-400 mr-2 mt-1"></i><strong>Segmentation:</strong> <span class="ml-1 leading-tight">${item['Segmentation available']}</span></div>
+                        <div class="flex items-start"><i class="fas fa-database text-gray-400 mr-2 mt-1"></i><strong>Source:</strong> <span class="ml-1 leading-tight">${item.Source}</span></div>
+                        <div class="flex items-start"><i class="fas fa-chart-area text-gray-400 mr-2 mt-1"></i><strong>Best Source:</strong> <span class="ml-1 leading-tight">${item['Best available source']}</span></div>
+                        <div class="flex items-start"><i class="fas fa-filter text-gray-400 mr-2 mt-1"></i><strong>Filters:</strong> <span class="ml-1 leading-tight">${item.Filters ? item.Filters.replace(/\n/g, '<br>') : 'N/A'}</span></div>
+                        <div class="flex items-center"><i class="fas fa-link text-gray-400 mr-2"></i><strong>Workspace Link:</strong> <a href="#" class="text-indigo-600 hover:text-indigo-800 transition-colors duration-200 ml-1">${item['Link to workspace']}</a></div>
+                    </div>
+                `;
+                kpiContainer.appendChild(card);
+            });
+        }
+
+        // Add event listener to the filter dropdown
+        subjectFilter.addEventListener('change', (event) => {
+            renderKPIs(event.target.value);
+        });
+
+        // Initial render of all KPIs
+        renderKPIs('all');
+    </script>
+</body>
+</html>
